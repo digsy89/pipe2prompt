@@ -3,6 +3,7 @@ import tomllib
 from pathlib import Path
 import os
 from pp.core import run_task
+import subprocess
 
 def load_prompts_from_toml():
     config_path = Path.home() / ".pp" / "config.toml"
@@ -73,21 +74,32 @@ def install_completion():
     if shell == 'bash':
         completion_script = '''
 _pp_completion() {
-    local commands="$(pp prompt list)"
-    COMPREPLY=( $(compgen -W "${commands}" -- "${COMP_WORDS[1]}") )
+    local prompts="$(pp prompt list)"
+    COMPREPLY=( $(compgen -W "${prompts}" -- "${COMP_WORDS[1]}") )
 }
 complete -F _pp_completion pp
 '''
         rc_file = os.path.expanduser('~/.bashrc')
+        
+        # 현재 세션에 바로 적용 (bash)
+        subprocess.run(['bash', '-c', completion_script])
+        
     elif shell == 'zsh':
         completion_script = '''
+autoload -Uz compinit
+compinit
+
 _pp() {
-    local commands=(${(f)"$(pp prompt list)"})
-    _describe 'command' commands
+    local prompts=(${(f)"$(pp prompt list)"})
+    _describe 'prompt' prompts
 }
 compdef _pp pp
 '''
         rc_file = os.path.expanduser('~/.zshrc')
+        
+        # zsh의 경우 completion 스크립트만 현재 세션에 적용
+        subprocess.run(['zsh', '-c', completion_script])
+        
     else:
         click.echo(f"Unsupported shell: {shell}")
         return
@@ -99,7 +111,6 @@ compdef _pp pp
             click.echo(f"Added completion script to {rc_file}")
         else:
             click.echo("Completion script already installed")
-    os.system(completion_script)
 
 @prompt.command()
 def update():
@@ -108,18 +119,23 @@ def update():
     click.echo("Prompt completion updated successfully")
 
 @prompt.command()
-def list():
-    """Internal command to get available commands for shell completion"""
-    # 설명이 있는 프롬프트들만 필터링
-    prompts_with_desc = [(name, config) for name, config in PROMPTS.items() if 'description' in config]
-    
-    # 가장 긴 프롬프트 이름의 길이 계산
-    max_name_length = max(len(name) for name, _ in prompts_with_desc)
-    
-    # 정렬된 상태로 출력
-    for name, config in sorted(prompts_with_desc):
-        padded_name = name.ljust(max_name_length)
-        click.echo(f"{click.style(padded_name, fg='green')}  {config['description']}")
+@click.option('--long', '-l', is_flag=True, help='Show long format including descriptions')
+def list(long):
+    """List available prompts"""
+    if long:
+        # 상세 정보 출력
+        prompts_with_desc = [(name, config) for name, config in PROMPTS.items() if 'description' in config]
+        if prompts_with_desc:
+            max_name_length = max(len(name) for name, _ in prompts_with_desc)
+            for name, config in sorted(prompts_with_desc):
+                padded_name = name.ljust(max_name_length)
+                click.echo(f"{click.style(padded_name, fg='green')}  {config['description']}")
+        else:
+            click.echo("No prompts with descriptions found.")
+    else:
+        # 이름만 출력
+        for name in sorted(PROMPTS.keys()):
+            click.echo(name)
 
 if __name__ == '__main__':
     cli()
