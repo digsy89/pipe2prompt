@@ -1,0 +1,5 @@
+[create-commit-message]
+description = "Create a commit message"
+
+[debug]
+description = "Debug mode"

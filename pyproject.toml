@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pp"
+version = "0.1.0"
+description = "Prompt to pipe"
+authors = [{name = "Ahn Keeho", email = "digsy89@gmail.com"}]
+license = {text = "MIT"}
+dependencies = ["click"]
+
+[project.scripts]
+pp = "pp.cli:cli"
