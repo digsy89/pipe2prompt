@@ -18,36 +18,6 @@ def load_prompts_from_toml():
 
 PROMPTS = load_prompts_from_toml()
 
-# class DynamicCLI(click.Group):
-#     def list_commands(self, ctx):
-#         global PROMPTS
-#         PROMPTS = load_prompts_from_toml()
-#         return ['update'] + sorted(list(PROMPTS.keys()))
-# 
-#     def get_command(self, ctx, cmd_name):
-#         if cmd_name == 'update':
-#             @click.command(help="Update command completion")
-#             def update():
-#                 global PROMPTS
-#                 PROMPTS = load_prompts_from_toml()
-#                 print(PROMPTS)
-#                 install_completion()
-#                 click.echo("Command completion updated successfully")
-#             return update
-#             
-#         if prompt_name in PROMPTS:
-#             prompt_config = PROMPTS[prompt_name]
-#             
-#             @click.command(help=prompt_config.get('description', ''))
-#             @click.pass_context
-#             def dynamic_command(ctx):
-#                 click.echo(f"Executing {prompt_name}")
-#                 if 'command' in prompt_config:
-#                     run_task(prompt_config['command'])
-#                 
-#             return dynamic_command
-#         return None
-
 @click.group()
 def cli():
     """PP CLI Tool"""
@@ -60,15 +30,7 @@ def prompt():
 
 cli.add_command(prompt)
 
-def get_prompt_completions():
-    global PROMPTS
-    PROMPTS = load_prompts_from_toml()
-    print(">_<", PROMPTS)
-    print(list(PROMPTS.keys()))
-    print(">_<")
-    return list(PROMPTS.keys())
-
-def install_completion():
+def install_prompt_completion():
     shell = os.environ.get('SHELL', '').split('/')[-1]
     
     if shell == 'bash':
@@ -115,7 +77,7 @@ compdef _pp pp
 @prompt.command()
 def update():
     """Update prompt completion"""
-    install_completion()
+    install_prompt_completion()
     click.echo("Prompt completion updated successfully")
 
 @prompt.command()
