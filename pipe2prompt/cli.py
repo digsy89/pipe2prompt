@@ -7,7 +7,7 @@ import sys
 
 
 def load_prompts_from_toml():
-    config_path = Path.home() / ".pp" / "config.toml"
+    config_path = Path.home() / ".p2p" / "config.toml"
     try:
         config_path.parent.mkdir(parents=True, exist_ok=True)
         with open(config_path, "rb") as f:
@@ -39,6 +39,7 @@ class PromptCommand(click.Command):
             stdin = sys.stdin.read().strip()
         click.echo(self.prompt_config)
         click.echo(stdin)
+        # TODO: 프롬프트 실행
 
 
 class PromptManager(click.Group):
@@ -85,11 +86,11 @@ class PromptManager(click.Group):
         shell = os.environ.get('SHELL', '').split('/')[-1]
         if shell == 'bash':
             completion_script = '''
-    _pp_completion() {
-        local prompts="$(pp prompt list)"
+    _p2p_completion() {
+        local prompts="$(p2p prompt list)"
         COMPREPLY=( $(compgen -W "${prompts}" -- "${COMP_WORDS[1]}") )
     }
-    complete -F _pp_completion pp
+    complete -F _p2p_completion p2p
     '''
             rc_file = os.path.expanduser('~/.bashrc')
             subprocess.run(['bash', '-c', completion_script])
@@ -98,11 +99,11 @@ class PromptManager(click.Group):
     autoload -Uz compinit
     compinit
 
-    _pp() {
-        local prompts=(${(f)"$(pp prompt list)"})
+    _p2p() {
+        local prompts=(${(f)"$(p2p prompt list)"})
         _describe 'prompt' prompts
     }
-    compdef _pp pp
+    compdef _p2p p2p
     '''
             rc_file = os.path.expanduser('~/.zshrc')
             subprocess.run(['zsh', '-c', completion_script])
@@ -113,7 +114,7 @@ class PromptManager(click.Group):
         with open(rc_file, 'a+') as f:
             f.seek(0)
             if completion_script not in f.read():
-                f.write(f'\n# PP CLI completion\n{completion_script}\n')
+                f.write(f'\n# P2P CLI completion\n{completion_script}\n')
                 click.echo(f"Added completion script to {rc_file}")
             else:
                 click.echo("Completion script already installed")
