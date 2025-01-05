@@ -1,9 +1,9 @@
 import os
 import sys
+import tomllib
 from pathlib import Path
 
 import click
-import tomllib
 from click import Command, Group
 
 from .completion import install_shell_completion
