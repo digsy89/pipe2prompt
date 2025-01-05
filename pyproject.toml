@@ -15,3 +15,20 @@ p2p = "pipe2prompt.cli:cli"
 
 [tool.setuptools]
 packages = ["pipe2prompt"]
+
+[tool.isort]
+profile = "black"
+line_length = 86
+src_paths = ["pipe2prompt"]
+
+[tool.ruff]
+exclude = [
+    ".venv",
+    ".git",
+    "__pycache__",
+    "build",
+    "dist"
+]
+line-length = 86
+target-version = "py38"
+fixable = ["ALL"]
