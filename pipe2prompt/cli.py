@@ -1,145 +1,150 @@
-import click
 import tomllib
 from pathlib import Path
 import os
-import subprocess
 import sys
+
+import click
+from click import Command, Group
+
+from .completion import install_shell_completion
+from .prompt import Prompt
+from .utils import highlight
+
+
+CONFIG_FILE = Path.home() / ".p2p" / "config.toml"
 
 
 def load_prompts_from_toml():
-    config_path = Path.home() / ".p2p" / "config.toml"
     try:
-        config_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(config_path, "rb") as f:
+        with open(CONFIG_FILE, "rb") as f:
             return tomllib.load(f)
     except FileNotFoundError:
-        print(f"Config file not found: {config_path}")
+        print(f"Config file not found: {CONFIG_FILE}")
+        print(f"Run `p2p init` to create a new config file")
         return {}
 
 
-class PromptCommand(click.Command):
+class PromptCommand(Command, Prompt):
     def __init__(self, name, prompt_config):
         self.prompt_config = prompt_config
 
-        super().__init__(
+        Command.__init__(
+            self,
             name=name,
             callback=self.run_prompt,
             params=[
-                click.Argument(['stdin'], required=False)
+                click.Argument(['pipe_input'], required=False)
             ],
             help=prompt_config.get('description', f'Execute {name} prompt'),
-            hidden=True
         )
+        Prompt.__init__(self, name, **prompt_config)
 
     def get_short_help_str(self, limit=45):
-        return self.prompt_config.get('description', f'Execute {self.name} prompt')
+        help_str = self.prompt_config.get('description', f'Execute {self.name} prompt')
+        help_str = "[PROMPT] " + help_str
+        return help_str
 
-    def run_prompt(self, stdin=None):
-        if stdin is None and not sys.stdin.isatty():
-            stdin = sys.stdin.read().strip()
-        click.echo(self.prompt_config)
-        click.echo(stdin)
-        # TODO: 프롬프트 실행
+    def run_prompt(self, pipe_input=None):
+        if pipe_input is None and not sys.stdin.isatty():
+            pipe_input = sys.stdin.read().strip()
+        self.run(pipe_input)
 
 
-class PromptManager(click.Group):
+class PromptManager(Group):
     """Manages prompt-related commands and configurations"""
     def __init__(self):
         super().__init__(name='prompt', help="Prompt management commands")
-        self.add_command(self.list_command())
-        self.add_command(self.update_command())
+        self.add_command(self.list_prompts())
 
-    def list_command(self):
+    def list_prompts(self):
         @click.command()
         @click.option('--long', '-l', is_flag=True, help='Show long format including descriptions')
         def list(long):
             """List available prompts"""
             cli_instance = click.get_current_context().find_root().command
-            prompts = cli_instance.prompts
+            prompts = {
+                name: cmd for name, cmd in cli_instance.commands.items()
+                if isinstance(cmd, PromptCommand)
+            }
+            if len(prompts) == 0:
+                return
+
+            max_name_length_with_padding = max(len(name) for name, _ in prompts.items()) + 2
 
             if long:
-                prompts_with_desc = [
-                    (name, config) for name, config in prompts.items()
-                    if 'description' in config
-                ]
-                if prompts_with_desc:
-                    max_name_length = max(len(name) for name, _ in prompts_with_desc)
-                    for name, config in sorted(prompts_with_desc):
-                        padded_name = name.ljust(max_name_length)
-                        click.echo(f"{click.style(padded_name, fg='green')}  {config['description']}")
-                else:
-                    click.echo("No prompts with descriptions found.")
+                for name, cmd in sorted(prompts.items()):
+                    padded_name = name.ljust(max_name_length_with_padding)
+                    click.echo(f"{click.style(padded_name, fg='green')}{cmd.get_short_help_str()}")
             else:
-                for name in sorted(prompts.keys()):
-                    click.echo(name)
+                terminal_width = os.get_terminal_size()[0]
+                columns = max(1, terminal_width // (max_name_length_with_padding))  # Calculate number of columns
+                
+                # Create rows x columns matrix
+                line = []
+                for idx, (name, cmd) in enumerate(sorted(prompts.items())):
+                    line.append(name.ljust(max_name_length_with_padding))
+                    if len(line) == columns or idx == len(prompts) - 1:
+                        click.echo(''.join(line).rstrip())
+                        line = []
+
         return list
 
-    def update_command(self):
-        @click.command()
-        def update():
-            """Update prompt completion"""
-            self.install_prompt_completion()
-            click.echo("Prompt completion updated successfully")
-        return update
 
-    def install_prompt_completion(self):
-        shell = os.environ.get('SHELL', '').split('/')[-1]
-        if shell == 'bash':
-            completion_script = '''
-    _p2p_completion() {
-        local prompts="$(p2p prompt list)"
-        COMPREPLY=( $(compgen -W "${prompts}" -- "${COMP_WORDS[1]}") )
-    }
-    complete -F _p2p_completion p2p
-    '''
-            rc_file = os.path.expanduser('~/.bashrc')
-            subprocess.run(['bash', '-c', completion_script])
-        elif shell == 'zsh':
-            completion_script = '''
-    autoload -Uz compinit
-    compinit
-
-    _p2p() {
-        local prompts=(${(f)"$(p2p prompt list)"})
-        _describe 'prompt' prompts
-    }
-    compdef _p2p p2p
-    '''
-            rc_file = os.path.expanduser('~/.zshrc')
-            subprocess.run(['zsh', '-c', completion_script])
-        else:
-            click.echo(f"Unsupported shell: {shell}")
-            return
-
-        with open(rc_file, 'a+') as f:
-            f.seek(0)
-            if completion_script not in f.read():
-                f.write(f'\n# P2P CLI completion\n{completion_script}\n')
-                click.echo(f"Added completion script to {rc_file}")
-            else:
-                click.echo("Completion script already installed")
+def init_command():
+    @click.command()
+    def init():
+        """Initialize shell completion"""
+        CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+        if not CONFIG_FILE.exists():
+            CONFIG_FILE.touch()
+        install_shell_completion()
+    return init
 
 
-class CLI(click.Group):
+class CLI(Group):
     def __init__(self):
         super().__init__()
         self.prompts = load_prompts_from_toml()
+        print(self.prompts)
+        quit()
 
+        self.add_command(init_command())
         self.add_command(PromptManager())
         for prompt_name, prompt_config in self.prompts.items():
-            self.add_command(PromptCommand(prompt_name, prompt_config))
+            if prompt_config.get('enabled', True):
+                self.add_command(PromptCommand(prompt_name, prompt_config))
+
+    def format_commands(self, ctx, formatter):
+        """Override format_commands to customize the help output"""
+        builtin_commands = []
+        prompt_commands = []
+
+        for subcommand in self.list_commands(ctx):
+            cmd = self.get_command(ctx, subcommand)
+            if cmd is None:
+                continue
+            if isinstance(cmd, PromptCommand):
+                prompt_commands.append((subcommand, cmd))
+            else:
+                builtin_commands.append((subcommand, cmd))
+
+        with formatter.section("Built-in Commands"):
+            formatter.write_dl([(name, cmd.get_short_help_str()) for name, cmd in builtin_commands])
+        
+        if len(prompt_commands) > 0:  # 사용자 정의 프롬프트가 있는 경우에만 섹션 표시
+            with formatter.section("User Defined Prompts"):
+                formatter.write_dl([(name, cmd.get_short_help_str()) for name, cmd in prompt_commands])
 
     def list_commands(self, ctx):
         """Return list of available commands"""
-        return sorted(
-            name for name, cmd in self.commands.items()
-            if not getattr(cmd, 'hidden', False)
-        )
+        return sorted(self.commands.keys())
 
     def get_command(self, ctx, cmd_name):
         """Get a specific command object"""
-        return self.commands.get(cmd_name)
+        cmd = self.commands.get(cmd_name)
 
+        return cmd
+    
 
 # CLI 인스턴스 생성
 cli = CLI()
