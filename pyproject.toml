@@ -27,8 +27,30 @@ exclude = [
     ".git",
     "__pycache__",
     "build",
-    "dist"
+    "dist",
+    ".ruff_cache",
+    ".github",
 ]
 line-length = 86
 target-version = "py38"
+
+[tool.ruff.lint]
 fixable = ["ALL"]
+select = [
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "I",  # isort
+    "UP", # pyupgrade
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "DTZ", # flake8-datetimez
+    "ISC", # flake8-implicit-str-concat
+    "PIE", # flake8-pie
+    "PGH", # pygrep-hooks
+    "RUF", # ruff-specific rules
+    "SIM", # flake8-simplify
+    "TCH", # flake8-type-checking
+    "TID", # flake8-tidy-imports
+    "UP", # pyupgrade
+]
+ignore = []

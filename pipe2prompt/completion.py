@@ -1,7 +1,7 @@
-import os
 import logging
-from pathlib import Path
+import os
 import subprocess
+from pathlib import Path
 
 from .utils import highlight
 
@@ -29,18 +29,24 @@ def install_shell_completion():
         return
 
     if shell not in SUPPORTED_SHELLS:
-        logging.error(f"Unsupported shell: `{shell}`. Supported shells: {SUPPORTED_SHELLS}")
+        logging.error(f"Unsupported shell: `{shell}`. "
+                      f"Supported shells: {SUPPORTED_SHELLS}")
         return
 
     home = Path('~')
     completion_command = f"_P2P_COMPLETE={shell}_source p2p"
     completion_command = subprocess.run(
-        completion_command, shell=True, check=True, capture_output=True, text=True).stdout
+        completion_command,
+        shell=True,
+        check=True,
+        capture_output=True,
+        text=True
+    ).stdout
     completion_directory = home / SUPPORTED_SHELLS[shell]['completion_directory']
     completion_directory.mkdir(parents=True, exist_ok=True)
     completion_file = completion_directory / '_p2p'
     completion_file.write_text(completion_command)
-    run_completion_command = f"source {str(completion_file)}"
+    run_completion_command = f"source {completion_file!s}"
 
     shell_config_file = home / SUPPORTED_SHELLS[shell]['config_file']
     shell_config_file.parent.mkdir(parents=True, exist_ok=True)
@@ -60,4 +66,5 @@ def install_shell_completion():
             logging.info("Completion script already installed")
 
     print(f"Completion script installed to {shell_config_file}")
-    print(f"Run `{highlight(run_completion_command)}` to enable completion in the current session")
+    print(f"Run `{highlight(run_completion_command)}` to enable completion "
+          "in the current session")

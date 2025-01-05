@@ -1,15 +1,13 @@
-import tomllib
-from pathlib import Path
 import os
 import sys
+from pathlib import Path
 
 import click
+import tomllib
 from click import Command, Group
 
 from .completion import install_shell_completion
 from .prompt import Prompt
-from .utils import highlight
-
 
 CONFIG_FILE = Path.home() / ".p2p" / "config.toml"
 
@@ -20,7 +18,7 @@ def load_prompts_from_toml():
             return tomllib.load(f)
     except FileNotFoundError:
         print(f"Config file not found: {CONFIG_FILE}")
-        print(f"Run `p2p init` to create a new config file")
+        print("Run `p2p init` to create a new config file")
         return {}
 
 
@@ -40,7 +38,8 @@ class PromptCommand(Command, Prompt):
         Prompt.__init__(self, name, **prompt_config)
 
     def get_short_help_str(self, limit=45):
-        help_str = self.prompt_config.get('description', f'Execute {self.name} prompt')
+        help_str = self.prompt_config.get(
+            'description', f'Execute {self.name} prompt')
         help_str = "[PROMPT] " + help_str
         return help_str
 
@@ -58,7 +57,8 @@ class PromptManager(Group):
 
     def list_prompts(self):
         @click.command()
-        @click.option('--long', '-l', is_flag=True, help='Show long format including descriptions')
+        @click.option('--long', '-l', is_flag=True,
+                      help='Show long format including descriptions')
         def list(long):
             """List available prompts"""
             cli_instance = click.get_current_context().find_root().command
@@ -69,20 +69,20 @@ class PromptManager(Group):
             if len(prompts) == 0:
                 return
 
-            max_name_length_with_padding = max(len(name) for name, _ in prompts.items()) + 2
+            max_name_length = max(len(name) for name, _ in prompts.items()) + 2
 
             if long:
                 for name, cmd in sorted(prompts.items()):
-                    padded_name = name.ljust(max_name_length_with_padding)
-                    click.echo(f"{click.style(padded_name, fg='green')}{cmd.get_short_help_str()}")
+                    padded_name = name.ljust(max_name_length)
+                    click.echo(f"{click.style(padded_name, fg='green')}"
+                               f"{cmd.get_short_help_str()}")
             else:
                 terminal_width = os.get_terminal_size()[0]
-                columns = max(1, terminal_width // (max_name_length_with_padding))  # Calculate number of columns
+                columns = max(1, terminal_width // max_name_length)
                 
-                # Create rows x columns matrix
                 line = []
-                for idx, (name, cmd) in enumerate(sorted(prompts.items())):
-                    line.append(name.ljust(max_name_length_with_padding))
+                for idx, (name, _) in enumerate(sorted(prompts.items())):
+                    line.append(name.ljust(max_name_length))
                     if len(line) == columns or idx == len(prompts) - 1:
                         click.echo(''.join(line).rstrip())
                         line = []
@@ -105,8 +105,6 @@ class CLI(Group):
     def __init__(self):
         super().__init__()
         self.prompts = load_prompts_from_toml()
-        print(self.prompts)
-        quit()
 
         self.add_command(init_command())
         self.add_command(PromptManager())
@@ -129,11 +127,21 @@ class CLI(Group):
                 builtin_commands.append((subcommand, cmd))
 
         with formatter.section("Built-in Commands"):
-            formatter.write_dl([(name, cmd.get_short_help_str()) for name, cmd in builtin_commands])
+            formatter.write_dl(
+                [
+                    (name, cmd.get_short_help_str())
+                    for name, cmd in builtin_commands
+                ]
+            )
         
-        if len(prompt_commands) > 0:  # 사용자 정의 프롬프트가 있는 경우에만 섹션 표시
+        if len(prompt_commands) > 0:
             with formatter.section("User Defined Prompts"):
-                formatter.write_dl([(name, cmd.get_short_help_str()) for name, cmd in prompt_commands])
+                formatter.write_dl(
+                    [
+                        (name, cmd.get_short_help_str())
+                        for name, cmd in prompt_commands
+                    ]
+                )
 
     def list_commands(self, ctx):
         """Return list of available commands"""
@@ -146,7 +154,6 @@ class CLI(Group):
         return cmd
     
 
-# CLI 인스턴스 생성
 cli = CLI()
 
 
