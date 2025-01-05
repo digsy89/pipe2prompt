@@ -12,3 +12,6 @@ dependencies = ["click"]
 
 [project.scripts]
 p2p = "pipe2prompt.cli:cli"
+
+[tool.setuptools]
+packages = ["pipe2prompt"]
