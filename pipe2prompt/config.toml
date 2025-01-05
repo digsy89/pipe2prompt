@@ -1,5 +1,32 @@
+# Prompt Requirements
+# ------------------
+# - description: Short description of what the prompt does (optional)
+# - content: The actual prompt template. Only {pipe} placeholder is allowed
+# - base_model: The OpenAI model to use (required)
+# - enabled: Whether the prompt is enabled (optional, defaults to true)
+
+# Example:
+# [prompt-name]
+# description = "What this prompt does"
+# content = """
+# Your prompt text here.
+# Use {pipe} to insert piped input.
+# """
+# base_model = "gpt-4" # Required
+# enabled = true # Optional
+
 [create-commit-message]
 description = "Create a commit message"
+content = """
+For given git diff, create a commit message.
+- use conventional commits
 
-[debug]
-description = "Debug mode"
+{pipe}
+"""
+base_model = "gpt-4o-mini"
+
+[test]
+description = "Test mode"
+content = "Do nothing"
+base_model = "gpt-4o-mini"
+enabled = false
