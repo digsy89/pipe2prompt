@@ -1,5 +1,5 @@
 # Example usage:
-# git log dev --not main | p2p create-pr-description
+# git log dev --not main | p2p pr-template
 [pr-template]
 description = "Create a PR template"
 content = """
