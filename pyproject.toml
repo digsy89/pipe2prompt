@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pipe2prompt"
-version = "0.1.0"
+version = "0.1.1"
 description = "Prompt to pipe"
 authors = [{name = "Ahn Keeho", email = "digsy89@gmail.com"}]
 license = {text = "MIT"}
