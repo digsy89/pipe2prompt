@@ -33,7 +33,7 @@ def install_shell_completion():
                       f"Supported shells: {SUPPORTED_SHELLS}")
         return
 
-    home = Path('~')
+    home = Path.home()
     completion_command = f"_P2P_COMPLETE={shell}_source p2p"
     completion_command = subprocess.run(
         completion_command,

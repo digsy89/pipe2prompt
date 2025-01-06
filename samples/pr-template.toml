@@ -1,0 +1,13 @@
+# Example usage:
+# git log dev --not main | p2p pr-template
+[pr-template]
+description = "Create a PR template"
+content = """
+This is the diff between master and my-feature branch.
+- Create a Pull Request template based on these changes.
+- Include sections like Background, Summary of Changes, Testing Steps, Related Issues.
+- Keep it concise yet informative for the team to review.
+
+{pipe}
+"""
+base_model = "gpt-4o"

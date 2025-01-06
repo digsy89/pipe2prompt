@@ -8,7 +8,25 @@ version = "0.1.0"
 description = "Prompt to pipe"
 authors = [{name = "Ahn Keeho", email = "digsy89@gmail.com"}]
 license = {text = "MIT"}
-dependencies = ["click"]
+dependencies = [
+    "click==8.1.7",
+    "openai==1.59.3",
+]
+requires-python = ">=3.9"
+readme = "README.rst"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
 
 [project.scripts]
 p2p = "pipe2prompt.cli:cli"

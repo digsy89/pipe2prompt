@@ -1,0 +1,14 @@
+[create-commit-message]
+description = "Create a commit message"
+content = """
+{pipe}
+
+Here is the diff of the changes I made. 
+- Create a concise commit message describing what was changed and why.
+- The first line should be a short summary (up to 50 characters).
+- Add an optional detailed explanation on subsequent lines if needed.
+- Make sure it clearly communicates the purpose and impact of the changes.
+- Use conventional commits
+- No code block
+"""
+base_model = "gpt-4o"

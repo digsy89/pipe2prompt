@@ -1,5 +1,5 @@
 pipe2prompt (p2p)
-================
+=================
 
 A command-line tool that lets you pipe input into customizable AI prompts.
 
@@ -9,6 +9,10 @@ A command-line tool that lets you pipe input into customizable AI prompts.
 
     # Generate a commit message from staged changes
     git diff --staged | p2p create-commit-message
+
+    # Example explanation of the above command
+    # This command takes the output of `git diff --staged` and pipes it into the `p2p` tool
+    # to generate a commit message based on the changes.
 
 **Example Output**
 
@@ -20,9 +24,15 @@ A command-line tool that lets you pipe input into customizable AI prompts.
     - Remove the `isort` ("I") code from the flake8 select list in `pyproject.toml`.
 
 Installation
------------
+------------
 
-Install from source:
+To install the package, you can use pip:
+
+.. code-block:: bash
+
+    pip install pipe2prompt
+
+To install from source:
 
 .. code-block:: bash
 
@@ -36,8 +46,18 @@ This will:
 2. Set up shell completion
 3. Create initial config file at ``~/.p2p/config.toml``
 
-Shell Completion
+OpenAI API Key
 --------------
+
+This tool requires an OpenAI API key to function. You can set it up in two ways:
+
+.. code-block:: bash
+
+    export OPENAI_API_KEY=your-api-key-here
+
+
+Shell Completion
+----------------
 
 To manually set up completion:
 
@@ -70,7 +90,6 @@ After installation, you may need to restart your shell or source your config fil
     # For fish
     source ~/.config/fish/config.fish
 
-
 Usage
 -----
 
@@ -88,8 +107,8 @@ Basic usage:
     p2p prompt list
     p2p prompt list --long
 
-Configuration
-------------
+Prompt Configuration
+--------------------
 
 Prompts are configured in ``~/.p2p/config.toml``. Example configuration:
 
@@ -111,6 +130,9 @@ Each prompt requires:
 - ``base_model``: The OpenAI model to use
 - ``description``: Description shown in help text
 - ``enabled``: Optional boolean to enable/disable the prompt
+
+You can find example configurations in the project's [pipe2prompt/config.toml](pipe2prompt/config.toml) file for reference.
+
 
 License
 -------
